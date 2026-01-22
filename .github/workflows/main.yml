@@ -1,8 +1,14 @@
 name: Send emails daily
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 22 * * *'
+
+# 添加权限声明，允许工作流修改仓库状态以保活
+permissions:
+  contents: write
+  actions: write
 
 jobs:
   calculate-and-send:
@@ -39,3 +45,14 @@ jobs:
           LANGUAGE: ${{ vars.LANGUAGE }}
         run: |
           uv run main.py
+
+  # 新增保活任务：防止 GitHub 60 天不活动自动禁用
+  keepalive-job:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keepalive Workflow
+        uses: gautamkrishnar/keepalive-workflow@v2
